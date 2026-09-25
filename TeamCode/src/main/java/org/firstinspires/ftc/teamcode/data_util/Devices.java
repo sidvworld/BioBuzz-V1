@@ -6,21 +6,20 @@ import dev.nextftc.hardware.actuators.NextServo;
 
 public class Devices {
 
-    public static NextMotor flDrive = new NextMotor(RobotController.controlHub(), 2);
-    public static NextMotor blDrive = new NextMotor(RobotController.controlHub(), 3);
-    public static NextMotor frDrive = new NextMotor(RobotController.expansionHub(), 2);
-    public static NextMotor brDrive = new NextMotor(RobotController.expansionHub(), 3);
+    public static final String fl = "fl";
+    public static final String fr = "fr";
+    public static final String bl = "bl";
+    public static final String br = "br";
+
+
+    public static final NextMotor intakeMotor = new NextMotor(RobotController.controlHub(), 0);
+
+
+    public static final NextMotor shooterMotor = new NextMotor(RobotController.controlHub(), 1);
+    public static final NextServo shooterServo = new NextServo(RobotController.controlHub(), 0);
 
 
 
-    public static NextMotor intakeMotor = new NextMotor(RobotController.controlHub(), 0);
-
-
-    public static NextMotor shooterMotor = new NextMotor(RobotController.controlHub(), 1);
-    public static NextServo shooterServo = new NextServo(RobotController.controlHub(), 0);
-
-
-
-    public static NextMotor transferMotor = new NextMotor(RobotController.expansionHub(), 0);
+    public static final NextMotor transferMotor = new NextMotor(RobotController.expansionHub(), 0);
 
 }
