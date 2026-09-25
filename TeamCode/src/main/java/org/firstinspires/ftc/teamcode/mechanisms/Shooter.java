@@ -66,7 +66,7 @@ public class Shooter implements Mechanism {
     }
 
     public void checkThreshold(){
-        IS_READY = shooterMotor.getThrottle() >= SHOOTING_THRESHOLD;
+        IS_READY = Math.abs(shooterMotor.getEncoderVelocity().getMagnitude()) >= SHOOTING_THRESHOLD;
     }
 
     public boolean isReady(){
@@ -77,5 +77,8 @@ public class Shooter implements Mechanism {
         return instant(() -> { shooterState = shooterState.equals(ShooterState.START_POLLEN) ? ShooterState.START_NECTAR : ShooterState.START_POLLEN; });
     }
 
-
+    @Override
+    public void periodic() {
+        checkThreshold();
+    }
 }
