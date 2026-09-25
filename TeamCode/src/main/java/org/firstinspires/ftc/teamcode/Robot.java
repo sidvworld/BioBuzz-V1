@@ -50,14 +50,22 @@ public class Robot implements NextRobot {
         gp1.a().onTrue(intake.toggleDirection());
 
         // shooter
-        gp1.rightTrigger().isUnder(GamepadData.rightTriggerThreshold).onTrue(shooter.idle());
+        gp1.rightTrigger().isUnder(GamepadData.rightTriggerThreshold).onTrue(parallel(
+                shooter.idle(),
+                transfer.idle()
+                ));
         gp1.rightTrigger().isOver(GamepadData.rightTriggerThreshold).onTrue(
                 parallel(
+                        drivetrain.holdPosition(),
                         shooter.run(),
                         sequential(waitUntil(shooter::isReady), transfer.run())
-                )
-        );
+                ));
         // gp1.rightTrigger().isOver(GamepadData.rightTriggerThreshold).onTrue(shooter.run())
         gp1.b().onTrue(shooter.toggleBall());
+    }
+
+    public void periodic(){
+        drivetrain.periodic();
+        shooter.periodic();
     }
 }

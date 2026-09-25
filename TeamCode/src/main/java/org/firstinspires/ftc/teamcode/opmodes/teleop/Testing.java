@@ -19,6 +19,6 @@ public class Testing extends OpMode {
 
     @Override
     public void loop() {
-        robot.drivetrain.manualDrive(gamepad1);
+        robot.periodic();
     }
 }

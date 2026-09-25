@@ -43,5 +43,4 @@ public class Transfer implements Mechanism {
         NextMotor.Direction currentDirection = transferMotor.getDirection();
         return instant(() -> transferMotor.setDirection(currentDirection.equals(NextMotor.Direction.FORWARD) ? NextMotor.Direction.REVERSE : NextMotor.Direction.FORWARD));
     }
-
 }

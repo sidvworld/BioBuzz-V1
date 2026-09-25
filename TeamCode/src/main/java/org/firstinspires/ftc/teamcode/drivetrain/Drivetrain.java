@@ -20,7 +20,7 @@ public class Drivetrain {
         follower = Constants.create(hardwareMap);
     }
 
-    public void update() {
+    public void periodic() {
         follower.update();
     }
 
