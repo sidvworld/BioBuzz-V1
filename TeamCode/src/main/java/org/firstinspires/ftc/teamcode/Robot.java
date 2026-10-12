@@ -1,5 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
+import static com.pedropathing.ivy.commands.Commands.waitMs;
 import static com.pedropathing.ivy.commands.Commands.waitUntil;
 import static com.pedropathing.ivy.groups.Groups.parallel;
 import static com.pedropathing.ivy.groups.Groups.sequential;
@@ -34,42 +35,41 @@ public class Robot implements NextRobot {
         drivetrain = new Drivetrain(hardwareMap, gamepad1);
     }
 
-    public void configureKeybinds(){
+    public void configureKeybinds() {
         // intake
-        gp1.leftTrigger().isUnder(GamepadData.leftTriggerThreshold).onTrue(intake.setState(Intake.IntakeState.IDLE));
-        gp1.leftTrigger().isOver(GamepadData.leftTriggerThreshold).onTrue(intake.setState(Intake.IntakeState.RUNNING));
-        gp1.a().onTrue(intake.toggleDirection());
+        gp1.rightBumper().onFalse(intake.setState(Intake.IntakeState.IDLE));
+        gp1.rightBumper().onTrue(intake.setState(Intake.IntakeState.RUNNING));
+        gp1.a().onTrue(intake.setState(Intake.IntakeState.REVERSE));
 
         // shooter
         // pollen
-        gp1.rightTrigger().isUnder(GamepadData.rightTriggerThreshold).onTrue(parallel(
-                drivetrain.setState(Drivetrain.DrivetrainState.MANUAL),
-                shooter.setState(Shooter.ShooterState.IDLE),
-                transfer.setState(Transfer.TransferState.IDLE)
-        ));
-        gp1.rightTrigger().isOver(GamepadData.rightTriggerThreshold).onTrue(
+        gp1.rightTrigger().isUnder(GamepadData.rightTriggerThreshold).onTrue(
+                parallel(
+                    drivetrain.setState(Drivetrain.DrivetrainState.MANUAL),
+                    shooter.setState(Shooter.ShooterState.IDLE),
+                    transfer.setState(Transfer.TransferState.IDLE)
+                )
+        );
+        gp1.rightTrigger().isOver(GamepadData.rightTriggerThreshold).onTrue(sequential(
+                parallel(
+                        shooter.setState(Shooter.ShooterState.REVERSE),
+                        transfer.setState(Transfer.TransferState.REVERSE),
+                        intake.setState(Intake.IntakeState.RUNNING)
+                ),
+                waitMs(300),
+                transfer.setState(Transfer.TransferState.IDLE),
                 parallel(
                         drivetrain.setState(Drivetrain.DrivetrainState.HOLD),
                         shooter.setState(Shooter.ShooterState.START_POLLEN),
-                        sequential(waitUntil(shooter::isReady), transfer.setState(Transfer.TransferState.RUNNING))
-                ));
-        // nectar
-        gp1.rightBumper().onFalse(parallel(
-                drivetrain.setState(Drivetrain.DrivetrainState.MANUAL),
-                shooter.setState(Shooter.ShooterState.IDLE),
-                transfer.setState(Transfer.TransferState.IDLE)
+                        sequential(
+                                waitUntil(shooter::isReady),
+                                transfer.setState(Transfer.TransferState.RUNNING))
+                )
         ));
-        gp1.rightBumper().onTrue(
-                parallel(
-                        drivetrain.setState(Drivetrain.DrivetrainState.HOLD),
-                        shooter.setState(Shooter.ShooterState.START_NECTAR),
-                        sequential(waitUntil(shooter::isReady), transfer.setState(Transfer.TransferState.RUNNING))
-                ));
-        // gp1.rightTrigger().isOver(GamepadData.rightTriggerThreshold).onTrue(shooter.run())
     }
 
     public void dataLog(){
-        telemetry.addData("Outtake RPM Setpoint: ", Shooter.VELOCITY_SETPOINT);
+        telemetry.addData("Outtake RPM Setpoint: ", Shooter.SHOOTING_SETPOINT);
         telemetry.addData("Outtake RPM: ", shooter.getRPM());
         telemetry.addData("Met Threshold: ", shooter.isReady());
         telemetry.update();
@@ -89,4 +89,3 @@ public class Robot implements NextRobot {
         dataLog();
     }
 }
-

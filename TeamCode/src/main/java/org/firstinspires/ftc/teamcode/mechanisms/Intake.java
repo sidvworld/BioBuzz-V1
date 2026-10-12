@@ -19,6 +19,7 @@ public class Intake implements Mechanism {
     public enum IntakeState {
         OFF,
         IDLE,
+        REVERSE,
         RUNNING
     }
 
@@ -35,6 +36,10 @@ public class Intake implements Mechanism {
 
             case IDLE:
                 intakeMotor.setThrottle(IDLE_POWER);
+                break;
+
+            case REVERSE:
+                intakeMotor.setThrottle(-POWER);
                 break;
 
             case RUNNING:

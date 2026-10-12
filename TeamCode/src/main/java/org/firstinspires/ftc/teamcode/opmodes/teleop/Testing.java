@@ -13,7 +13,7 @@ public class Testing extends OpMode {
 
     @Override
     public void init() {
-        robot = new Robot(gamepad1, Alliance.BLUE);
+        robot = new Robot(Alliance.BLUE);
         robot.init();
     }
 

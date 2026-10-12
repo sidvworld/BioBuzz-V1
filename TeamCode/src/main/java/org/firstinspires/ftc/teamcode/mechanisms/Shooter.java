@@ -5,7 +5,6 @@ import com.pedropathing.ivy.Command;
 import org.firstinspires.ftc.teamcode.data_util.Devices;
 
 import dev.nextftc.hardware.actuators.NextMotor;
-import dev.nextftc.hardware.actuators.NextServo;
 import dev.nextftc.robot.Mechanism;
 import dev.nextftc.units.Units;
 
@@ -13,13 +12,12 @@ import dev.nextftc.units.Units;
 public class Shooter implements Mechanism {
 
     NextMotor shooterMotor = Devices.shooterMotor;
-    NextServo shooterServo = Devices.shooterServo;
+    // NextServo shooterServo = Devices.shooterServo;
 
-    public static final double VELOCITY_SETPOINT = 0.5;
-    public static final double SHOOTING_THRESHOLD = 2500;
-    public static final double IDLE_POWER = 0.25;
-    public static final double SERVO_POSE_NECTAR = 0.85;
-    public static final double SERVO_POSE_POLLEN = 0.45;
+    public static final double SHOOTING_SETPOINT = 3000;
+    public static final double SHOOTING_THRESHOLD = 300;
+    public static final double IDLE_SETPOINT = SHOOTING_SETPOINT * 0.5;
+    // public static final double SERVO_POSE_POLLEN = 0.45;
 
     public ShooterState shooterState;
     public boolean IS_READY;
@@ -27,8 +25,8 @@ public class Shooter implements Mechanism {
     public enum ShooterState{
         OFF,
         IDLE,
+        REVERSE,
         START_POLLEN,
-        START_NECTAR,
     }
 
     public Shooter() {
@@ -39,21 +37,20 @@ public class Shooter implements Mechanism {
         IS_READY = false;
     }
 
-    public void cycle(){
-        switch (shooterState){
+    public void cycle() {
+        switch (shooterState) {
             case OFF:
                 shooterMotor.setThrottle(0);
                 break;
             case IDLE:
-                shooterMotor.setThrottle(IDLE_POWER);
+                shooterMotor.setThrottle(IDLE_SETPOINT);
                 break;
-            case START_NECTAR:
-                shooterServo.setPosition(SERVO_POSE_NECTAR);
-                shooterMotor.setVelocitySetpoint(Units.getRotationsPerMinute(VELOCITY_SETPOINT));
+            case REVERSE:
+                shooterMotor.setThrottle(-IDLE_SETPOINT);
                 break;
             case START_POLLEN:
-                shooterServo.setPosition(SERVO_POSE_POLLEN);
-                shooterMotor.setVelocitySetpoint(Units.getRotationsPerMinute(VELOCITY_SETPOINT));
+                // shooterServo.setPosition(SERVO_POSE_POLLEN);
+                shooterMotor.setVelocitySetpoint(Units.getRotationsPerMinute(SHOOTING_SETPOINT));
                 break;
             default:
                 setState(ShooterState.IDLE);
@@ -70,7 +67,7 @@ public class Shooter implements Mechanism {
     }
 
     public void checkThreshold(){
-        IS_READY = Math.abs(getRPM()) >= SHOOTING_THRESHOLD;
+        IS_READY = Math.abs(getRPM()) >= SHOOTING_SETPOINT - SHOOTING_THRESHOLD;
     }
 
     public boolean isReady(){

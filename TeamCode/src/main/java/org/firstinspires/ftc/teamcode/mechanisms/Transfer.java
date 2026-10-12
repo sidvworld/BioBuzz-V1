@@ -19,6 +19,7 @@ public class Transfer implements Mechanism {
     public enum TransferState {
         OFF,
         IDLE,
+        REVERSE,
         RUNNING
     }
 
@@ -35,6 +36,10 @@ public class Transfer implements Mechanism {
 
             case IDLE:
                 transferMotor.setThrottle(IDLE_POWER);
+                break;
+
+            case REVERSE:
+                transferMotor.setThrottle(-POWER);
                 break;
 
             case RUNNING:
