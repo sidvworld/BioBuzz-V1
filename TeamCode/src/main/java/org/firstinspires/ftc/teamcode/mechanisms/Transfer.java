@@ -8,14 +8,7 @@ import dev.nextftc.hardware.actuators.NextMotor;
 import dev.nextftc.robot.Mechanism;
 
 public class Transfer implements Mechanism {
-
     NextMotor transferMotor = Devices.transferMotor;
-
-    public static final double POWER = 1.0;
-    public static final double IDLE_POWER = 0.0;
-
-    public TransferState transferState;
-
     public enum TransferState {
         OFF,
         IDLE,
@@ -23,9 +16,13 @@ public class Transfer implements Mechanism {
         RUNNING
     }
 
+    public static final double POWER = 1.0;
+    public static final double IDLE_POWER = 0.0;
+
+    public TransferState transferState;
     public Transfer() {
-        transferState = TransferState.IDLE;
         transferMotor.setDirection(NextMotor.Direction.FORWARD);
+        transferState = TransferState.IDLE;
     }
 
     public void cycle() {

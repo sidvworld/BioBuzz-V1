@@ -10,9 +10,15 @@ import dev.nextftc.units.Units;
 
 
 public class Shooter implements Mechanism {
-
     NextMotor shooterMotor = Devices.shooterMotor;
     // NextServo shooterServo = Devices.shooterServo;
+
+    public enum ShooterState{
+        OFF,
+        IDLE,
+        REVERSE,
+        START_POLLEN,
+    }
 
     public static final double SHOOTING_SETPOINT = 3000;
     public static final double SHOOTING_THRESHOLD = 300;
@@ -21,13 +27,6 @@ public class Shooter implements Mechanism {
 
     public ShooterState shooterState;
     public boolean IS_READY;
-
-    public enum ShooterState{
-        OFF,
-        IDLE,
-        REVERSE,
-        START_POLLEN,
-    }
 
     public Shooter() {
         shooterMotor.setDirection(NextMotor.Direction.REVERSE);

@@ -8,13 +8,7 @@ import dev.nextftc.hardware.actuators.NextMotor;
 import dev.nextftc.robot.Mechanism;
 
 public class Intake implements Mechanism {
-
     NextMotor intakeMotor = Devices.intakeMotor;
-
-    public static final double POWER = 1.0;
-    public static final double IDLE_POWER = 0.0;
-
-    public IntakeState intakeState;
 
     public enum IntakeState {
         OFF,
@@ -22,6 +16,10 @@ public class Intake implements Mechanism {
         REVERSE,
         RUNNING
     }
+
+    public IntakeState intakeState;
+    public static final double POWER = 1.0;
+    public static final double IDLE_POWER = 0.0;
 
     public Intake() {
         intakeState = IntakeState.IDLE;

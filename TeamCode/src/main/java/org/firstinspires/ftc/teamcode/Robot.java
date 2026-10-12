@@ -20,7 +20,7 @@ import dev.nextftc.robot.triggers.CommandGamepad;
 public class Robot implements NextRobot {
     public final CommandGamepad gp1;
     public final Alliance alliance;
-
+    public StateMachine fsm;
     public final Intake intake;
     public final Shooter shooter;
     public final Transfer transfer;
@@ -33,6 +33,8 @@ public class Robot implements NextRobot {
         shooter = new Shooter();
         transfer = new Transfer();
         drivetrain = new Drivetrain(hardwareMap, gamepad1);
+
+        configureKeybinds();
     }
 
     public void configureKeybinds() {
