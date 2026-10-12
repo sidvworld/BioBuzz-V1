@@ -15,6 +15,8 @@ public class Testing extends OpMode {
     public void init() {
         robot = new Robot(Alliance.BLUE);
         robot.init();
+
+
     }
 
     @Override
