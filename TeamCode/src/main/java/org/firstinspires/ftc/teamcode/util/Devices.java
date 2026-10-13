@@ -1,4 +1,4 @@
-package org.firstinspires.ftc.teamcode.data_util;
+package org.firstinspires.ftc.teamcode.util;
 
 import dev.nextftc.hardware.RobotController;
 import dev.nextftc.hardware.actuators.NextMotor;

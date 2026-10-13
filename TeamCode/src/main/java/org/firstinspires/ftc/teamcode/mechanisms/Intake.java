@@ -2,7 +2,7 @@ package org.firstinspires.ftc.teamcode.mechanisms;
 
 import com.pedropathing.ivy.Command;
 
-import org.firstinspires.ftc.teamcode.data_util.Devices;
+import org.firstinspires.ftc.teamcode.util.Devices;
 
 import dev.nextftc.hardware.actuators.NextMotor;
 import dev.nextftc.robot.Mechanism;

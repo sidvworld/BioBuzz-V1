@@ -1,26 +1,26 @@
 package org.firstinspires.ftc.teamcode.opmodes.teleop;
 
-import com.qualcomm.robotcore.eventloop.opmode.OpMode;
-import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.pedropathing.ivy.Scheduler;
 
-import org.firstinspires.ftc.teamcode.Robot;
-import org.firstinspires.ftc.teamcode.data_util.Alliance;
+import org.firstinspires.ftc.teamcode.robot.Robot;
 
-@TeleOp (name = "Testing")
-public class Testing extends OpMode {
+import dev.nextftc.robot.Telemetry;
+import dev.nextftc.robot.opmode.NextOpMode;
+import dev.nextftc.robot.opmode.NextTeleop;
 
-    private Robot robot;
+@NextTeleop(name = "Testing")
+public class Testing extends NextOpMode {
+    public final Robot robot;
+    public Testing(Robot robot) {
+        super(robot);
+        this.robot = robot;
 
-    @Override
-    public void init() {
-        robot = new Robot(Alliance.BLUE);
-        robot.init();
-
-
+        Scheduler.reset();
     }
 
     @Override
-    public void loop() {
+    public void periodic() {
         robot.periodic();
+        Scheduler.execute();
     }
 }
