@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode.drivetrain;
 import static com.pedropathing.ivy.commands.Commands.instant;
 
 import com.pedropathing.follower.Follower;
-import com.pedropathing.follower.ManualDrive;
 import com.pedropathing.ivy.Command;
 import com.pedropathing.math.Pose;
 import com.pedropathing.paths.Path;
@@ -28,7 +27,7 @@ public class Drivetrain {
     private final Follower follower;
     private final Gamepad gamepad;
 
-    private DrivetrainState drivetrainState = DrivetrainState.MANUAL;
+    private DrivetrainState drivetrainState = DrivetrainState.OFF;
     private DrivetrainState previousState;
     private Path currentPath;
 
@@ -107,13 +106,17 @@ public class Drivetrain {
     private void manualDrive(double scale) {
         follower.manual(
                 deadband(-gamepad.left_stick_y) * scale,
-                deadband(gamepad.left_stick_x) * scale,
-                deadband(gamepad.right_stick_x) * scale
+                deadband(-gamepad.left_stick_x) * scale,
+                deadband(-gamepad.right_stick_x) * scale
         );
     }
 
     public Pose getPose() {
         return follower.pose();
+    }
+
+    public void setPose(Pose pose) {
+        follower.setPose(pose);
     }
 
     public DrivetrainState getState() {
@@ -124,7 +127,8 @@ public class Drivetrain {
         cycle();
         follower.update();
         if (drivetrainState == DrivetrainState.FOLLOWING && !follower.isBusy()) {
-            drivetrainState = DrivetrainState.MANUAL;
+            drivetrainState = DrivetrainState.HOLD;
+            previousState = DrivetrainState.HOLD;
         }
     }
 }

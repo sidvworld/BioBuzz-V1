@@ -31,6 +31,8 @@ public class Shooter implements Mechanism {
     public Shooter() {
         shooterMotor.setDirection(NextMotor.Direction.REVERSE);
         shooterMotor.setZeroPowerBehavior(NextMotor.ZeroPowerBehavior.FLOAT);
+        // starting gains for the 6000 RPM motor
+        shooterMotor.getVelocityConstants().withP(0.0002).withV(1.0 / 6000.0);
 
         shooterState = ShooterState.IDLE;
         IS_READY = false;
@@ -42,31 +44,35 @@ public class Shooter implements Mechanism {
                 shooterMotor.setThrottle(0);
                 break;
             case IDLE:
-                shooterMotor.setThrottle(IDLE_SETPOINT);
+                shooterMotor.setVelocitySetpoint(Units.getRotationsPerMinute(IDLE_SETPOINT));
                 break;
             case REVERSE:
-                shooterMotor.setThrottle(-IDLE_SETPOINT);
+                shooterMotor.setVelocitySetpoint(Units.getRotationsPerMinute(-IDLE_SETPOINT));
                 break;
             case START_POLLEN:
                 // shooterServo.setPosition(SERVO_POSE_POLLEN);
                 shooterMotor.setVelocitySetpoint(Units.getRotationsPerMinute(SHOOTING_SETPOINT));
                 break;
             default:
-                setState(ShooterState.IDLE);
+                shooterState = ShooterState.IDLE;
                 break;
         }
     }
 
     public Command setState(ShooterState state) {
-        return instant(() -> shooterState = state);
+        return instant(() -> {
+            IS_READY = false;
+            shooterState = state;
+        });
     }
 
     public double getRPM(){
-        return shooterMotor.getEncoderVelocity().getMagnitude();
+        return shooterMotor.getEncoderVelocity().into(Units.RotationsPerMinute);
     }
 
     public void checkThreshold(){
-        IS_READY = Math.abs(getRPM()) >= SHOOTING_SETPOINT - SHOOTING_THRESHOLD;
+        IS_READY = shooterState == ShooterState.START_POLLEN
+                && Math.abs(getRPM() - SHOOTING_SETPOINT) <= SHOOTING_THRESHOLD;
     }
 
     public boolean isReady(){

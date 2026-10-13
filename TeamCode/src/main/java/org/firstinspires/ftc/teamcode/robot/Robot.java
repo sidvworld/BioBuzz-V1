@@ -4,9 +4,7 @@ import static com.pedropathing.ivy.commands.Commands.waitMs;
 import static com.pedropathing.ivy.commands.Commands.waitUntil;
 import static com.pedropathing.ivy.groups.Groups.parallel;
 import static com.pedropathing.ivy.groups.Groups.sequential;
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.gamepad1;
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.hardwareMap;
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
+import static com.pedropathing.ivy.commands.Commands.instant;
 
 import com.pedropathing.ivy.Command;
 
@@ -17,23 +15,29 @@ import org.firstinspires.ftc.teamcode.util.Alliance;
 import org.firstinspires.ftc.teamcode.mechanisms.Transfer;
 
 import dev.nextftc.robot.NextRobot;
+import dev.nextftc.robot.opmode.NextOpMode;
 import dev.nextftc.robot.triggers.CommandGamepad;
 public class Robot implements NextRobot {
-    public final CommandGamepad gp1;
+    public CommandGamepad gp1;
+    private org.firstinspires.ftc.robotcore.external.Telemetry telemetry;
+    private boolean autonomous;
+    private boolean off;
     public Alliance alliance;
     public StateMachine fsm = new StateMachine();
     public final Intake intake;
     public final Shooter shooter;
     public final Transfer transfer;
-    public final Drivetrain drivetrain;
+    public Drivetrain drivetrain;
+    public Robot() {
+        this(Alliance.BLUE);
+    }
+
     public Robot(Alliance alliance) {
-        gp1 = new CommandGamepad(gamepad1);
         this.alliance = alliance;
 
         intake = new Intake();
         shooter = new Shooter();
         transfer = new Transfer();
-        drivetrain = new Drivetrain(hardwareMap, gamepad1);
     }
 
     private Command idleMechanisms() {
@@ -63,14 +67,17 @@ public class Robot implements NextRobot {
 
         fsm.configureState(
                 StateMachine.State.IDLE,
-                this::idleMechanisms,
+                () -> autonomous ? idleMechanisms() : parallel(
+                        idleMechanisms(), drivetrain.setState(Drivetrain.DrivetrainState.MANUAL)),
                 StateMachine::none,
                 StateMachine::none
         );
 
         fsm.configureState(
                 StateMachine.State.INTAKE,
-                () -> intake.setState(Intake.IntakeState.RUNNING),
+                () -> parallel(
+                        intake.setState(Intake.IntakeState.RUNNING),
+                        drivetrain.setState(Drivetrain.DrivetrainState.MANUAL)),
                 StateMachine::none,
                 () -> intake.setState(Intake.IntakeState.IDLE)
         );
@@ -120,8 +127,10 @@ public class Robot implements NextRobot {
     }
 
     private void configureKeybinds() {
-        gp1.b().toggleOnTrue(fsm.requestStateCmd(StateMachine.State.OFF));
-        gp1.b().toggleOnFalse(fsm.requestStateCmd(StateMachine.State.IDLE));
+        gp1.b().onTrue(instant(() -> {
+            off = !off;
+            fsm.requestState(off ? StateMachine.State.OFF : StateMachine.State.IDLE);
+        }));
 
         gp1.rightBumper()
                 .and(gp1.leftBumper())
@@ -148,15 +157,27 @@ public class Robot implements NextRobot {
         telemetry.update();
     }
 
-    public void init(){
+    public void init(NextOpMode opMode, boolean autonomous){
+        this.autonomous = autonomous;
+        off = false;
+        telemetry = opMode.telemetry;
+        gp1 = new CommandGamepad(opMode.gamepad1);
+        drivetrain = new Drivetrain(opMode.hardwareMap, opMode.gamepad1);
         configureFSM();
-        configureKeybinds();
+        if (!autonomous) configureKeybinds();
 
-        fsm.requestStateCmd(StateMachine.State.IDLE);
+        if (!autonomous) {
+            intake.intakeState = Intake.IntakeState.OFF;
+            shooter.shooterState = Shooter.ShooterState.OFF;
+            shooter.IS_READY = false;
+            transfer.transferState = Transfer.TransferState.OFF;
+        }
+        fsm.initialize(autonomous ? StateMachine.State.IDLE : StateMachine.State.OFF);
         dataLog();
     }
 
     public void periodic(){
+        if (off) fsm.requestState(StateMachine.State.OFF);
         fsm.update();
         drivetrain.periodic();
         shooter.periodic();

@@ -79,13 +79,13 @@ public class StateMachine {
                 : transitions.get(state).getOrDefault(next, StateMachine::none);
 
         running = sequential(
-                state == null ? none() : exits.get(state).get(),
+                state == null || next == State.OFF ? none() : exits.get(state).get(),
                 bridge.get(),
                 instant(() -> state = next),
                 enters.get(next).get(),
                 actives.get(next).get(),
                 infinite(() -> {})
-        );
+        ).setPriority(1);
         destination = next;
         running.schedule();
         if (!running.isScheduled()) {
