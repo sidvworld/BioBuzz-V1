@@ -20,7 +20,7 @@ import dev.nextftc.robot.NextRobot;
 import dev.nextftc.robot.triggers.CommandGamepad;
 public class Robot implements NextRobot {
     public final CommandGamepad gp1;
-    public final Alliance alliance;
+    public Alliance alliance;
     public StateMachine fsm = new StateMachine();
     public final Intake intake;
     public final Shooter shooter;
