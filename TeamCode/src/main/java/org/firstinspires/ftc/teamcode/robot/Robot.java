@@ -1,12 +1,12 @@
 package org.firstinspires.ftc.teamcode.robot;
 
 import static com.pedropathing.ivy.commands.Commands.waitMs;
-import static com.pedropathing.ivy.commands.Commands.waitUntil;
 import static com.pedropathing.ivy.groups.Groups.parallel;
 import static com.pedropathing.ivy.groups.Groups.sequential;
 import static com.pedropathing.ivy.commands.Commands.instant;
 
 import com.pedropathing.ivy.Command;
+import com.pedropathing.math.Pose;
 
 import org.firstinspires.ftc.teamcode.drivetrain.Drivetrain;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
@@ -15,30 +15,20 @@ import org.firstinspires.ftc.teamcode.util.Alliance;
 import org.firstinspires.ftc.teamcode.mechanisms.Transfer;
 
 import dev.nextftc.robot.NextRobot;
+import dev.nextftc.robot.Telemetry;
 import dev.nextftc.robot.opmode.NextOpMode;
 import dev.nextftc.robot.triggers.CommandGamepad;
 public class Robot implements NextRobot {
     public CommandGamepad gp1;
-    private org.firstinspires.ftc.robotcore.external.Telemetry telemetry;
     private boolean autonomous;
     private boolean off;
     public Alliance alliance;
     public StateMachine fsm = new StateMachine();
-    public final Intake intake;
-    public final Shooter shooter;
-    public final Transfer transfer;
+    public Intake intake;
+    public Shooter shooter;
+    public Transfer transfer;
     public Drivetrain drivetrain;
-    public Robot() {
-        this(Alliance.BLUE);
-    }
-
-    public Robot(Alliance alliance) {
-        this.alliance = alliance;
-
-        intake = new Intake();
-        shooter = new Shooter();
-        transfer = new Transfer();
-    }
+    public Robot() {}
 
     private Command idleMechanisms() {
         return parallel(
@@ -55,6 +45,10 @@ public class Robot implements NextRobot {
                 shooter.setState(Shooter.ShooterState.OFF),
                 transfer.setState(Transfer.TransferState.OFF)
         );
+    }
+
+    private Command feedWhenReady() {
+        return transfer.infinite(() -> transfer.transferState = shooter.isReady() ? Transfer.TransferState.RUNNING : Transfer.TransferState.IDLE);
     }
 
     private void configureFSM() {
@@ -75,9 +69,7 @@ public class Robot implements NextRobot {
 
         fsm.configureState(
                 StateMachine.State.INTAKE,
-                () -> parallel(
-                        intake.setState(Intake.IntakeState.RUNNING),
-                        drivetrain.setState(Drivetrain.DrivetrainState.MANUAL)),
+                () -> intake.setState(Intake.IntakeState.RUNNING),
                 StateMachine::none,
                 () -> intake.setState(Intake.IntakeState.IDLE)
         );
@@ -94,13 +86,10 @@ public class Robot implements NextRobot {
                         parallel(
                                 drivetrain.setState(Drivetrain.DrivetrainState.HOLD),
                                 shooter.setState(Shooter.ShooterState.START_POLLEN),
-                                sequential(
-                                        waitUntil(shooter::isReady),
-                                        transfer.setState(Transfer.TransferState.RUNNING)
-                                )
+                                feedWhenReady()
                         )
                 ),
-                this::idleMechanisms
+                () -> parallel(idleMechanisms(), drivetrain.setState(Drivetrain.DrivetrainState.MANUAL))
         );
 
         fsm.configureState(
@@ -116,13 +105,10 @@ public class Robot implements NextRobot {
                         parallel(
                                 drivetrain.setState(Drivetrain.DrivetrainState.HOLD),
                                 shooter.setState(Shooter.ShooterState.START_POLLEN),
-                                sequential(
-                                        waitUntil(shooter::isReady),
-                                        transfer.setState(Transfer.TransferState.RUNNING)
-                                )
+                                feedWhenReady()
                         )
                 ),
-                this::idleMechanisms
+                () -> parallel(idleMechanisms(), drivetrain.setState(Drivetrain.DrivetrainState.MANUAL))
         );
     }
 
@@ -151,17 +137,24 @@ public class Robot implements NextRobot {
     }
 
     public void dataLog(){
-        telemetry.addData("Outtake RPM Setpoint: ", Shooter.SHOOTING_SETPOINT);
-        telemetry.addData("Outtake RPM: ", shooter.getRPM());
-        telemetry.addData("Met Threshold: ", shooter.isReady());
-        telemetry.update();
+        Pose pose = drivetrain.getPose();
+        Telemetry.log("robot state: ", fsm.getState());
+        Telemetry.log("dt State: ", drivetrain.getState());
+        Telemetry.log("Pose X: ", pose.x());
+        Telemetry.log("Pose Y: ", pose.y());
+        Telemetry.log("Heading: ", Math.toDegrees(pose.heading()));
+        Telemetry.log("Outtake RPM Setpoint: ", shooter.getRPMSetpoint());
+        Telemetry.log("Outtake RPM: ", shooter.getRPM());
+        Telemetry.log("Shooter Ready: ", shooter.isReady());
     }
 
     public void init(NextOpMode opMode, boolean autonomous){
         this.autonomous = autonomous;
         off = false;
-        telemetry = opMode.telemetry;
         gp1 = new CommandGamepad(opMode.gamepad1);
+        intake = new Intake();
+        shooter = new Shooter();
+        transfer = new Transfer();
         drivetrain = new Drivetrain(opMode.hardwareMap, opMode.gamepad1);
         configureFSM();
         if (!autonomous) configureKeybinds();
