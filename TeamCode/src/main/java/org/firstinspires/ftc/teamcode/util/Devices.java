@@ -20,7 +20,6 @@ public class Devices {
     public static final NextMotor shooterMotor = new NextMotor(RobotController.controlHub(), 1, Units.getRadians(2.0 * Math.PI / 28.0));
     public static final NextServo shooterServo = new NextServo(RobotController.controlHub(), 0);
 
-
     public static final NextMotor transferMotor = new NextMotor(RobotController.expansionHub(), 0);
 
 }

@@ -20,11 +20,14 @@ public class Shooter implements Mechanism {
         START_POLLEN,
     }
 
-    public static final double SHOOTING_SETPOINT = 3000;
+    public static double SHOOTING_SETPOINT = 3000;
     public static final double SHOOTING_THRESHOLD = 300;
     public static final long READY_TIME_MS = 100;
     public static final double IDLE_SETPOINT = SHOOTING_SETPOINT * 0.5;
     // public static final double SERVO_POSE_POLLEN = 0.45;
+
+    public static final double KP = 85.0;
+    public static final double KV = 35.0;
 
     public ShooterState shooterState;
     public boolean IS_READY;
@@ -34,7 +37,7 @@ public class Shooter implements Mechanism {
         shooterMotor.setDirection(NextMotor.Direction.REVERSE);
         shooterMotor.setZeroPowerBehavior(NextMotor.ZeroPowerBehavior.FLOAT);
         // starting gains for the 6000 RPM motor
-        shooterMotor.getVelocityConstants().withP(0.0002).withV(1.0 / 6000.0);
+        shooterMotor.getVelocityConstants().withP(KP).withV(KV);
 
         shooterState = ShooterState.IDLE;
         IS_READY = false;
@@ -83,11 +86,9 @@ public class Shooter implements Mechanism {
     }
 
     public void checkThreshold(){
-        if (shooterState == ShooterState.START_POLLEN
-                && Math.abs(getRPM() - SHOOTING_SETPOINT) <= SHOOTING_THRESHOLD) {
+        if (shooterState == ShooterState.START_POLLEN && Math.abs(getRPM() - SHOOTING_SETPOINT) <= SHOOTING_THRESHOLD) {
             long now = System.nanoTime();
             if (readySinceNanos == 0) readySinceNanos = now;
-            // Require continuous time at speed before starting or resuming feeding.
             IS_READY = now - readySinceNanos >= READY_TIME_MS * 1_000_000L;
         } else {
             readySinceNanos = 0;
