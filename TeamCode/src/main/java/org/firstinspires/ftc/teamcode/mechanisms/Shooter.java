@@ -1,8 +1,10 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
+import static org.firstinspires.ftc.teamcode.util.Constants.Shooter.*;
+
 import com.pedropathing.ivy.Command;
 
-import org.firstinspires.ftc.teamcode.util.Devices;
+import org.firstinspires.ftc.teamcode.util.Constants;
 
 import dev.nextftc.hardware.actuators.NextMotor;
 import dev.nextftc.robot.Mechanism;
@@ -10,9 +12,7 @@ import dev.nextftc.units.Units;
 
 
 public class Shooter implements Mechanism {
-    NextMotor shooterMotor = Devices.shooterMotor;
-    // NextServo shooterServo = Devices.shooterServo;
-
+    NextMotor shooterMotor = Constants.Shooter.shooterMotor;
     public enum ShooterState{
         OFF,
         IDLE,
@@ -20,23 +20,13 @@ public class Shooter implements Mechanism {
         START_POLLEN,
     }
 
-    public static double SHOOTING_SETPOINT = 3000;
-    public static final double SHOOTING_THRESHOLD = 300;
-    public static final long READY_TIME_MS = 100;
-    public static final double IDLE_SETPOINT = SHOOTING_SETPOINT * 0.5;
-    // public static final double SERVO_POSE_POLLEN = 0.45;
-
-    public static final double KP = 85.0;
-    public static final double KV = 35.0;
-
     public ShooterState shooterState;
     public boolean IS_READY;
-    private long readySinceNanos;
+    private long readySinceNs;
 
     public Shooter() {
         shooterMotor.setDirection(NextMotor.Direction.REVERSE);
         shooterMotor.setZeroPowerBehavior(NextMotor.ZeroPowerBehavior.FLOAT);
-        // starting gains for the 6000 RPM motor
         shooterMotor.getVelocityConstants().withP(KP).withV(KV);
 
         shooterState = ShooterState.IDLE;
@@ -55,7 +45,6 @@ public class Shooter implements Mechanism {
                 shooterMotor.setVelocitySetpoint(Units.getRotationsPerMinute(-IDLE_SETPOINT));
                 break;
             case START_POLLEN:
-                // shooterServo.setPosition(SERVO_POSE_POLLEN);
                 shooterMotor.setVelocitySetpoint(Units.getRotationsPerMinute(SHOOTING_SETPOINT));
                 break;
             default:
@@ -67,7 +56,7 @@ public class Shooter implements Mechanism {
     public Command setState(ShooterState state) {
         return instant(() -> {
             IS_READY = false;
-            readySinceNanos = 0;
+            readySinceNs = 0;
             shooterState = state;
         });
     }
@@ -88,10 +77,10 @@ public class Shooter implements Mechanism {
     public void checkThreshold(){
         if (shooterState == ShooterState.START_POLLEN && Math.abs(getRPM() - SHOOTING_SETPOINT) <= SHOOTING_THRESHOLD) {
             long now = System.nanoTime();
-            if (readySinceNanos == 0) readySinceNanos = now;
-            IS_READY = now - readySinceNanos >= READY_TIME_MS * 1_000_000L;
+            if (readySinceNs == 0) readySinceNs = now;
+            IS_READY = now - readySinceNs >= READY_TIME_MS * 1_000_000L;
         } else {
-            readySinceNanos = 0;
+            readySinceNs = 0;
             IS_READY = false;
         }
     }

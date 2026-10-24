@@ -1,24 +1,26 @@
 package org.firstinspires.ftc.teamcode.opmodes.teleop;
 
+import com.pedropathing.math.Pose;
+
 import org.firstinspires.ftc.teamcode.robot.Robot;
 import org.firstinspires.ftc.teamcode.robot.StateMachine;
+import org.firstinspires.ftc.teamcode.util.Constants;
 import org.firstinspires.ftc.teamcode.util.MatchState;
-import org.firstinspires.ftc.teamcode.util.Alliance;
 import dev.nextftc.robot.opmode.NextOpMode;
 import dev.nextftc.robot.opmode.NextTeleop;
 
-@NextTeleop(name = "Testing")
-public class Testing extends NextOpMode {
+@NextTeleop(name = "Testing Teleop")
+public class TestingTeleop extends NextOpMode {
     private final Robot robot;
 
-    public Testing(Robot robot) {
+    public TestingTeleop(Robot robot) {
         super(robot);
         this.robot = robot;
-        robot.alliance = Alliance.BLUE;
+        robot.alliance = Constants.Alliance.BLUE;
         robot.init(this, false);
         if (MatchState.hasState()) {
             robot.drivetrain.setPose(MatchState.getPose());
-        }
+        } else { robot.drivetrain.setPose(new Pose(0, 0, 0)); }
     }
 
     @Override

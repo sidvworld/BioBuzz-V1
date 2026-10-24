@@ -1,6 +1,8 @@
-package org.firstinspires.ftc.teamcode.drivetrain;
+package org.firstinspires.ftc.teamcode.mechanisms;
 
 import static com.pedropathing.ivy.commands.Commands.instant;
+import static com.pedropathing.ivy.commands.Commands.waitUntil;
+import static com.pedropathing.ivy.groups.Groups.sequential;
 
 import com.pedropathing.follower.Follower;
 import com.pedropathing.ivy.Command;
@@ -9,7 +11,7 @@ import com.pedropathing.paths.Path;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 
-import org.firstinspires.ftc.teamcode.pedro.Constants;
+import org.firstinspires.ftc.teamcode.util.Constants;
 
 public class Drivetrain {
     public enum DrivetrainState {
@@ -32,7 +34,7 @@ public class Drivetrain {
     private Path currentPath;
 
     public Drivetrain(HardwareMap hardwareMap, Gamepad gamepad) {
-        follower = Constants.create(hardwareMap);
+        follower = org.firstinspires.ftc.teamcode.util.Constants.create(hardwareMap);
         this.gamepad = gamepad;
     }
 
@@ -111,6 +113,12 @@ public class Drivetrain {
         );
     }
 
+    public Command waitUntilPathFinished(){
+        return waitUntil(() ->
+                drivetrainState != DrivetrainState.FOLLOWING
+        );
+    }
+
     public Pose getPose() {
         return follower.pose();
     }
@@ -126,9 +134,9 @@ public class Drivetrain {
     public void periodic() {
         cycle();
         follower.update();
+
         if (drivetrainState == DrivetrainState.FOLLOWING && !follower.isBusy()) {
             drivetrainState = DrivetrainState.HOLD;
-            previousState = DrivetrainState.HOLD;
         }
     }
 }

@@ -4,7 +4,7 @@ import com.pedropathing.math.Pose;
 
 /** Auto-to-TeleOp data, kept only while the Robot Controller app is running. */
 public final class MatchState {
-    private static Pose pose;
+    private static Pose pose = null;
 
     private MatchState() {}
 

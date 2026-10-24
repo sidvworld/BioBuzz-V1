@@ -8,11 +8,11 @@ import static com.pedropathing.ivy.groups.Groups.sequential;
 import com.pedropathing.ivy.Command;
 
 import java.util.EnumMap;
+import java.util.Objects;
 import java.util.function.Supplier;
 
 public class StateMachine {
     public enum State {
-        OFF,
         IDLE,
         INTAKE,
         SHOOT_POLLEN,
@@ -44,7 +44,7 @@ public class StateMachine {
     }
 
     public void addTransition(State from, State to, Supplier<Command> transition){
-        transitions.get(from).put(to, transition);
+        Objects.requireNonNull(transitions.get(from)).put(to, transition);
     }
 
     public void initialize(State initial) {
@@ -66,31 +66,36 @@ public class StateMachine {
 
     public void update() {
         if (requested == null) return;
+
         if (requested == destination) {
-            if (!running.isScheduled()) {
-                throw new IllegalStateException("interrupted externally");
-            }
             return;
         }
 
-        if (running != null) running.cancel();
-        final State next = requested;
-        Supplier<Command> bridge = state == null ? StateMachine::none
-                : transitions.get(state).getOrDefault(next, StateMachine::none);
+        if (running != null) {
+            running.cancel();
+        }
 
+        final State next = requested;
+
+        Supplier<Command> bridge = state == null
+                ? StateMachine::none
+                : Objects.requireNonNull(transitions.get(state))
+                .getOrDefault(next, StateMachine::none);
+
+        assert bridge != null;
         running = sequential(
-                state == null || next == State.OFF ? none() : exits.get(state).get(),
+                state == null
+                        ? none()
+                        : Objects.requireNonNull(exits.get(state)).get(),
                 bridge.get(),
                 instant(() -> state = next),
-                enters.get(next).get(),
-                actives.get(next).get(),
+                Objects.requireNonNull(enters.get(next)).get(),
+                Objects.requireNonNull(actives.get(next)).get(),
                 infinite(() -> {})
         ).setPriority(1);
+
         destination = next;
         running.schedule();
-        if (!running.isScheduled()) {
-            throw new IllegalStateException("blocked by other cmd");
-        }
     }
 
     public void stop() {

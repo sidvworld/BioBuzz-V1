@@ -1,8 +1,7 @@
-package org.firstinspires.ftc.teamcode.util.auto_util;
+package org.firstinspires.ftc.teamcode.opmodes.autos.routines;
 
 import static com.pedropathing.api.Paths.line;
 import static com.pedropathing.ivy.commands.Commands.waitMs;
-import static com.pedropathing.ivy.commands.Commands.waitUntil;
 import static com.pedropathing.ivy.groups.Groups.sequential;
 
 import com.pedropathing.api.PoseFactory;
@@ -12,8 +11,6 @@ import com.pedropathing.paths.Path;
 
 import org.firstinspires.ftc.teamcode.robot.Robot;
 import org.firstinspires.ftc.teamcode.robot.StateMachine;
-import org.firstinspires.ftc.teamcode.drivetrain.Drivetrain;
-import org.firstinspires.ftc.teamcode.mechanisms.Transfer;
 
 public final class AutoRoutines {
     private static final PoseFactory poseFactory = PoseFactory.degrees();
@@ -30,10 +27,9 @@ public final class AutoRoutines {
         public static Command run(Robot robot) {
             return sequential(
                     robot.drivetrain.startPathCmd(t1P1()),
-                    waitUntil(() -> robot.drivetrain.getState() != Drivetrain.DrivetrainState.FOLLOWING),
-                    robot.fsm.requestStateCmd(StateMachine.State.SHOOT_POLLEN),
-                    waitUntil(() -> robot.shooter.isReady() && robot.transfer.transferState == Transfer.TransferState.RUNNING),
-                    waitMs(300),
+                    robot.drivetrain.waitUntilPathFinished(),
+                    robot.fsm.requestStateCmd(StateMachine.State.INTAKE),
+                    waitMs(500),
                     robot.fsm.requestStateCmd(StateMachine.State.IDLE)
             );
         }

@@ -1,23 +1,22 @@
 package org.firstinspires.ftc.teamcode.mechanisms;
 
+import static org.firstinspires.ftc.teamcode.util.Constants.Transfer.*;
+
 import com.pedropathing.ivy.Command;
 
-import org.firstinspires.ftc.teamcode.util.Devices;
+import org.firstinspires.ftc.teamcode.util.Constants;
 
 import dev.nextftc.hardware.actuators.NextMotor;
 import dev.nextftc.robot.Mechanism;
 
 public class Transfer implements Mechanism {
-    NextMotor transferMotor = Devices.transferMotor;
+    NextMotor transferMotor = Constants.Transfer.transferMotor;
     public enum TransferState {
         OFF,
         IDLE,
         REVERSE,
         RUNNING
     }
-
-    public static final double POWER = 1.0;
-    public static final double IDLE_POWER = 0.0;
 
     public TransferState transferState;
     public Transfer() {
@@ -51,14 +50,6 @@ public class Transfer implements Mechanism {
 
     public Command setState(TransferState state) {
         return instant(() -> transferState = state);
-    }
-
-    public Command toggleDirection() {
-        return instant(() -> {
-            NextMotor.Direction currentDirection = transferMotor.getDirection();
-            transferMotor.setDirection(currentDirection == NextMotor.Direction.FORWARD ? NextMotor.Direction.REVERSE : NextMotor.Direction.FORWARD
-            );
-        });
     }
 
     @Override
