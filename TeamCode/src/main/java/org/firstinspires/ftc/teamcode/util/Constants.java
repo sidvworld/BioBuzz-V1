@@ -34,14 +34,14 @@ public class Constants {
         public static final double rightTriggerThreshold = 0.2;
     }
     public static class Intake {
-        public static final NextMotor intakeMotor = new NextMotor(RobotController.controlHub(), 0);
+        public static final NextMotor intakeMotor = new NextMotor(RobotController.expansionHub(), 0);
         public static final double intakeIdlePower = 0.0;
         public static final double intakeRunningPower = 1.0;
     }
 
     public static class Shooter {
         // 6000 RPM goBILDA 5203 motor, 1:1 flywheel: 28 encoder counts per revolution.
-        public static final NextMotor shooterMotor = new NextMotor(RobotController.controlHub(), 1, Units.getRadians(2.0 * Math.PI / 28.0));
+        public static final NextMotor shooterMotor = new NextMotor(RobotController.controlHub(), 0, Units.getRadians(2.0 * Math.PI / 28.0));
 
         public static double SHOOTING_SETPOINT = 3000;
         public static final double SHOOTING_THRESHOLD = 300;
@@ -53,7 +53,8 @@ public class Constants {
     }
 
     public static class Transfer {
-        public static final NextMotor transferMotor = new NextMotor(RobotController.expansionHub(), 0);
+        public static final NextMotor transferMotor1 = new NextMotor(RobotController.controlHub(), 1);
+        public static final NextMotor transferMotor2 = new NextMotor(RobotController.expansionHub(), 3);
         public static final double POWER = 1.0;
         public static final double IDLE_POWER = 0.0;
     }
@@ -68,6 +69,15 @@ public class Constants {
 
         public static final double rangeDegrees = 355;
         public static final Pose turretOffset = new Pose(0, 0);
+    }
+
+    public static class FlowerBar {
+        public static final NextServo flowerBarServo = new NextServo(RobotController.controlHub(), 0, Constants.FlowerBar.servoCacheTolerance);
+        public static final NextMotor.Direction flowerBarServoDirection = NextMotor.Direction.REVERSE;
+
+        public static final double STOW_POSE = 0.95;
+        public static final double DEPLOY_POSE = 0.3;
+        public static final double servoCacheTolerance = 0.001;
     }
 
     public static class ShotCalculator {

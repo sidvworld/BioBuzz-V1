@@ -23,7 +23,7 @@ public class Drivetrain {
     }
 
     private static final double DRIVE_SCALE = 1.0;
-    private static final double SLOW_SCALE = 0.5;
+    private static final double SLOW_SCALE = 0.25;
     private static final double DEADBAND = 0.05;
 
     private final Follower follower;
@@ -107,8 +107,8 @@ public class Drivetrain {
 
     private void manualDrive(double scale) {
         follower.manual(
-                deadband(-gamepad.left_stick_y) * scale,
-                deadband(-gamepad.left_stick_x) * scale,
+                deadband(gamepad.left_stick_y) * scale,
+                deadband(gamepad.left_stick_x) * scale,
                 deadband(-gamepad.right_stick_x) * scale
         );
     }

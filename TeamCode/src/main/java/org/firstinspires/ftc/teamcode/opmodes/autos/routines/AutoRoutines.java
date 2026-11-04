@@ -6,11 +6,11 @@ import static com.pedropathing.ivy.groups.Groups.sequential;
 
 import com.pedropathing.api.PoseFactory;
 import com.pedropathing.ivy.Command;
+import com.pedropathing.ivy.commands.Commands;
 import com.pedropathing.math.Pose;
 import com.pedropathing.paths.Path;
 
 import org.firstinspires.ftc.teamcode.robot.Robot;
-import org.firstinspires.ftc.teamcode.robot.StateMachine;
 
 public final class AutoRoutines {
     private static final PoseFactory poseFactory = PoseFactory.degrees();
@@ -25,13 +25,7 @@ public final class AutoRoutines {
         }
 
         public static Command run(Robot robot) {
-            return sequential(
-                    robot.drivetrain.startPathCmd(t1P1()),
-                    robot.drivetrain.waitUntilPathFinished(),
-                    robot.fsm.requestStateCmd(StateMachine.State.INTAKE),
-                    waitMs(500),
-                    robot.fsm.requestStateCmd(StateMachine.State.IDLE)
-            );
+            return waitMs(100);
         }
     }
 }

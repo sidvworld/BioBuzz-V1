@@ -2,7 +2,6 @@ package org.firstinspires.ftc.teamcode.opmodes.autos;
 
 import org.firstinspires.ftc.teamcode.opmodes.autos.routines.AutoRoutines;
 import org.firstinspires.ftc.teamcode.robot.Robot;
-import org.firstinspires.ftc.teamcode.robot.StateMachine;
 
 import org.firstinspires.ftc.teamcode.util.Constants;
 import org.firstinspires.ftc.teamcode.util.MatchState;
@@ -26,8 +25,7 @@ public class Test1Auto extends NextOpMode {
 
     @Override
     public void start() {
-        robot.fsm.requestState(StateMachine.State.IDLE);
-        AutoRoutines.Test1.run(robot).schedule();
+        robot.setState(Robot.State.IDLE);
     }
 
     @Override

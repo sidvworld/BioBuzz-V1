@@ -16,7 +16,10 @@ public class StateMachine {
         IDLE,
         INTAKE,
         SHOOT_POLLEN,
-        INTAKE_AND_SHOOT
+        INTAKE_AND_SHOOT,
+        INTAKE_AND_SLOW,
+        HOLD,
+        FLOWER_BAR
     }
 
     private final EnumMap<State, Supplier<Command>> enters = new EnumMap<>(State.class);
