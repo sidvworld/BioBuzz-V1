@@ -141,42 +141,51 @@ class ForwardVelocity extends TuningOpMode<Double> {
         Localizer localizer = localizerFunction.apply(hardwareMap);
         Drivetrain drivetrain = drivetrainFunction.apply(hardwareMap);
 
-        boolean end = false;
+        try {
+            boolean end = false;
 
-        localizer.setPose(Pose.zero());
-        localizer.update();
-
-        DrivePowers power = new DrivePowers(1,0,0);
-
-        for (int i = 0; i < RECORD_NUMBER; i++) {
-            velocities.add(0.0);
-        }
-
-        Thread.sleep(1000);
-        waitForStart();
-        localizer.setPose(Pose.zero());
-        localizer.update();
-
-        while (!end) {
+            localizer.setPose(Pose.zero());
             localizer.update();
-            if (Math.abs(localizer.pose().x()) > distance) {
-                end = true;
-                drivetrain.stop();
-            } else {
-                drivetrain.drive(power, true);
-                double currentVelocity = Math.abs(localizer.twist().toVector2D().x());
-                velocities.addLast(currentVelocity);
-                velocities.removeFirst();
-            }
-        }
 
-        drivetrain.stop();
-        double average = 0;
-        for (double velocity : velocities) {
-                average += velocity;
+            DrivePowers power = new DrivePowers(1,0,0);
+
+            for (int i = 0; i < RECORD_NUMBER; i++) {
+                velocities.add(0.0);
+            }
+
+            Thread.sleep(1000);
+            waitForStart();
+            if (!opModeIsActive()) throw new InterruptedException("Tuning stopped");
+            ElapsedTime timeout = new ElapsedTime();
+            localizer.setPose(Pose.zero());
+            localizer.update();
+
+            while (!end && opModeIsActive() && timeout.seconds() < 10) {
+                localizer.update();
+                if (Math.abs(localizer.pose().x()) > distance) {
+                    end = true;
+                    drivetrain.stop();
+                } else {
+                    drivetrain.drive(power, true);
+                    double currentVelocity = Math.abs(localizer.twist().toVector2D().x());
+                    velocities.addLast(currentVelocity);
+                    velocities.removeFirst();
+                }
+            }
+
+            drivetrain.stop();
+            if (!opModeIsActive()) throw new InterruptedException("Tuning stopped");
+            if (!end) throw new IllegalStateException("Tuning timed out after 10 seconds");
+
+            double average = 0;
+            for (double velocity : velocities) {
+                    average += velocity;
+            }
+            average /= velocities.size();
+            return average;
+        } finally {
+            drivetrain.stop();
         }
-        average /= velocities.size();
-        return average;
     }
 }
 
@@ -199,42 +208,51 @@ class StrafeVelocity extends TuningOpMode<Double> {
         Localizer localizer = localizerFunction.apply(hardwareMap);
         Drivetrain drivetrain = drivetrainFunction.apply(hardwareMap);
 
-        boolean end = false;
+        try {
+            boolean end = false;
 
-        localizer.setPose(Pose.zero());
-        localizer.update();
-
-        DrivePowers power = new DrivePowers(0,1,0);
-
-        for (int i = 0; i < RECORD_NUMBER; i++) {
-            velocities.add(0.0);
-        }
-
-        Thread.sleep(1000);
-        waitForStart();
-        localizer.setPose(Pose.zero());
-        localizer.update();
-
-        while (!end) {
+            localizer.setPose(Pose.zero());
             localizer.update();
-            if (Math.abs(localizer.pose().y()) > distance) {
-                end = true;
-                drivetrain.stop();
-            } else {
-                drivetrain.drive(power, false);
-                double currentVelocity = Math.abs(localizer.twist().toVector2D().y());
-                velocities.addLast(currentVelocity);
-                velocities.removeFirst();
-            }
-        }
 
-        drivetrain.stop();
-        double average = 0;
-        for (double velocity : velocities) {
-            average += velocity;
+            DrivePowers power = new DrivePowers(0,1,0);
+
+            for (int i = 0; i < RECORD_NUMBER; i++) {
+                velocities.add(0.0);
+            }
+
+            Thread.sleep(1000);
+            waitForStart();
+            if (!opModeIsActive()) throw new InterruptedException("Tuning stopped");
+            ElapsedTime timeout = new ElapsedTime();
+            localizer.setPose(Pose.zero());
+            localizer.update();
+
+            while (!end && opModeIsActive() && timeout.seconds() < 10) {
+                localizer.update();
+                if (Math.abs(localizer.pose().y()) > distance) {
+                    end = true;
+                    drivetrain.stop();
+                } else {
+                    drivetrain.drive(power, false);
+                    double currentVelocity = Math.abs(localizer.twist().toVector2D().y());
+                    velocities.addLast(currentVelocity);
+                    velocities.removeFirst();
+                }
+            }
+
+            drivetrain.stop();
+            if (!opModeIsActive()) throw new InterruptedException("Tuning stopped");
+            if (!end) throw new IllegalStateException("Tuning timed out after 10 seconds");
+
+            double average = 0;
+            for (double velocity : velocities) {
+                average += velocity;
+            }
+            average /= velocities.size();
+            return average;
+        } finally {
+            drivetrain.stop();
         }
-        average /= velocities.size();
-        return average;
     }
 }
 
@@ -262,70 +280,82 @@ class ForwardDeceleration extends TuningOpMode<Double> {
         Localizer localizer = localizerFunction.apply(hardwareMap);
         Drivetrain drivetrain = drivetrainFunction.apply(hardwareMap);
 
-        accelerations.clear();
-        previousVelocity = 0;
-        previousTimeNano = 0;
-        stopping = false;
+        try {
+            accelerations.clear();
+            previousVelocity = 0;
+            previousTimeNano = 0;
+            stopping = false;
 
-        localizer.setPose(Pose.zero());
-        localizer.update();
-
-        DrivePowers power = new DrivePowers(1, 0, 0);
-        Thread.sleep(1000);
-        waitForStart();
-        localizer.setPose(Pose.zero());
-        localizer.update();
-
-        drivetrain.drive(power, false);
-
-        while (!stopping) {
+            localizer.setPose(Pose.zero());
             localizer.update();
-            double currentVelocity = localizer.twist().toVector2D().x();
-            if (Math.abs(currentVelocity) > velocity) {
+
+            DrivePowers power = new DrivePowers(1, 0, 0);
+            Thread.sleep(1000);
+            waitForStart();
+            if (!opModeIsActive()) throw new InterruptedException("Tuning stopped");
+            ElapsedTime timeout = new ElapsedTime();
+            localizer.setPose(Pose.zero());
+            localizer.update();
+
+            drivetrain.drive(power, false);
+
+            while (!stopping && opModeIsActive() && timeout.seconds() < 10) {
+                localizer.update();
+                double currentVelocity = localizer.twist().toVector2D().x();
+                if (Math.abs(currentVelocity) > velocity) {
+                    previousVelocity = currentVelocity;
+                    previousTimeNano = System.nanoTime();
+
+                    stopping = true;
+                    drivetrain.stop(false);
+                }
+            }
+
+            if (!opModeIsActive()) throw new InterruptedException("Tuning stopped");
+            if (!stopping) throw new IllegalStateException("Target velocity not reached within 10 seconds");
+            timeout.reset();
+            boolean end = false;
+
+            while (!end && opModeIsActive() && timeout.seconds() < 10) {
+                localizer.update();
+                double currentVelocity = localizer.twist().toVector2D().x();
+                long currentTimeNano = System.nanoTime();
+                double dt = (currentTimeNano - previousTimeNano) / 1e9;
+
+                if (dt > 0) {
+                    double acceleration = (currentVelocity - previousVelocity) / dt;
+                    accelerations.add(acceleration);
+                }
+
                 previousVelocity = currentVelocity;
-                previousTimeNano = System.nanoTime();
+                previousTimeNano = currentTimeNano;
 
-                stopping = true;
-                drivetrain.stop(false);
-            }
-        }
-
-        boolean end = false;
-
-        while (!end) {
-            localizer.update();
-            double currentVelocity = localizer.twist().toVector2D().x();
-            long currentTimeNano = System.nanoTime();
-            double dt = (currentTimeNano - previousTimeNano) / 1e9;
-
-            if (dt > 0) {
-                double acceleration = (currentVelocity - previousVelocity) / dt;
-                accelerations.add(acceleration);
+                if (Math.abs(currentVelocity) <= 1) {
+                    end = true;
+                }
             }
 
-            previousVelocity = currentVelocity;
-            previousTimeNano = currentTimeNano;
+            drivetrain.stop(false);
 
-            if (Math.abs(currentVelocity) <= 1) {
-                end = true;
+            if (!opModeIsActive()) throw new InterruptedException("Tuning stopped");
+            if (!end) throw new IllegalStateException("Tuning timed out after 10 seconds");
+
+            double average = 0;
+
+            for (double acceleration : accelerations) {
+                average += acceleration;
             }
+
+            if (accelerations.isEmpty()) {
+                return 0.0;
+            }
+
+            average /= accelerations.size();
+
+            return Math.abs(average);
+        } finally {
+            drivetrain.stop();
         }
-
-        drivetrain.stop(false);
-
-        double average = 0;
-
-        for (double acceleration : accelerations) {
-            average += acceleration;
-        }
-
-        if (accelerations.isEmpty()) {
-            return 0.0;
-        }
-
-        average /= accelerations.size();
-
-        return Math.abs(average);
     }
 }
 
@@ -353,70 +383,82 @@ class StrafeDeceleration extends TuningOpMode<Double> {
         Localizer localizer = localizerFunction.apply(hardwareMap);
         Drivetrain drivetrain = drivetrainFunction.apply(hardwareMap);
 
-        accelerations.clear();
-        previousVelocity = 0;
-        previousTimeNano = 0;
-        stopping = false;
+        try {
+            accelerations.clear();
+            previousVelocity = 0;
+            previousTimeNano = 0;
+            stopping = false;
 
-        localizer.setPose(Pose.zero());
-        localizer.update();
-
-        DrivePowers power = new DrivePowers(0, 1, 0);
-        Thread.sleep(1000);
-        waitForStart();
-        localizer.setPose(Pose.zero());
-        localizer.update();
-
-        drivetrain.drive(power, false);
-
-        while (!stopping) {
+            localizer.setPose(Pose.zero());
             localizer.update();
-            double currentVelocity = localizer.twist().toVector2D().y();
-            if (Math.abs(currentVelocity) > velocity) {
+
+            DrivePowers power = new DrivePowers(0, 1, 0);
+            Thread.sleep(1000);
+            waitForStart();
+            if (!opModeIsActive()) throw new InterruptedException("Tuning stopped");
+            ElapsedTime timeout = new ElapsedTime();
+            localizer.setPose(Pose.zero());
+            localizer.update();
+
+            drivetrain.drive(power, false);
+
+            while (!stopping && opModeIsActive() && timeout.seconds() < 10) {
+                localizer.update();
+                double currentVelocity = localizer.twist().toVector2D().y();
+                if (Math.abs(currentVelocity) > velocity) {
+                    previousVelocity = currentVelocity;
+                    previousTimeNano = System.nanoTime();
+
+                    stopping = true;
+                    drivetrain.stop(false);
+                }
+            }
+
+            if (!opModeIsActive()) throw new InterruptedException("Tuning stopped");
+            if (!stopping) throw new IllegalStateException("Target velocity not reached within 10 seconds");
+            timeout.reset();
+            boolean end = false;
+
+            while (!end && opModeIsActive() && timeout.seconds() < 10) {
+                localizer.update();
+                double currentVelocity = localizer.twist().toVector2D().y();
+                long currentTimeNano = System.nanoTime();
+                double dt = (currentTimeNano - previousTimeNano) / 1e9;
+
+                if (dt > 0) {
+                    double acceleration = (currentVelocity - previousVelocity) / dt;
+                    accelerations.add(acceleration);
+                }
+
                 previousVelocity = currentVelocity;
-                previousTimeNano = System.nanoTime();
+                previousTimeNano = currentTimeNano;
 
-                stopping = true;
-                drivetrain.stop(false);
-            }
-        }
-
-        boolean end = false;
-
-        while (!end) {
-            localizer.update();
-            double currentVelocity = localizer.twist().toVector2D().y();
-            long currentTimeNano = System.nanoTime();
-            double dt = (currentTimeNano - previousTimeNano) / 1e9;
-
-            if (dt > 0) {
-                double acceleration = (currentVelocity - previousVelocity) / dt;
-                accelerations.add(acceleration);
+                if (Math.abs(currentVelocity) <= 1) {
+                    end = true;
+                }
             }
 
-            previousVelocity = currentVelocity;
-            previousTimeNano = currentTimeNano;
+            drivetrain.stop(false);
 
-            if (Math.abs(currentVelocity) <= 1) {
-                end = true;
+            if (!opModeIsActive()) throw new InterruptedException("Tuning stopped");
+            if (!end) throw new IllegalStateException("Tuning timed out after 10 seconds");
+
+            double average = 0;
+
+            for (double acceleration : accelerations) {
+                average += acceleration;
             }
+
+            if (accelerations.isEmpty()) {
+                return 0.0;
+            }
+
+            average /= accelerations.size();
+
+            return Math.abs(average);
+        } finally {
+            drivetrain.stop();
         }
-
-        drivetrain.stop(false);
-
-        double average = 0;
-
-        for (double acceleration : accelerations) {
-            average += acceleration;
-        }
-
-        if (accelerations.isEmpty()) {
-            return 0.0;
-        }
-
-        average /= accelerations.size();
-
-        return Math.abs(average);
     }
 }
 

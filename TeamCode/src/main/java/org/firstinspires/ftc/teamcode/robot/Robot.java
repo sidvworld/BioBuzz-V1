@@ -1,20 +1,21 @@
 package org.firstinspires.ftc.teamcode.robot;
 
+import static com.pedropathing.ivy.commands.Commands.instant;
 import static com.pedropathing.ivy.groups.Groups.parallel;
-import static org.firstinspires.ftc.teamcode.util.Constants.Gamepad.leftTriggerThreshold;
-import static org.firstinspires.ftc.teamcode.util.Constants.Gamepad.rightTriggerThreshold;
+import static org.firstinspires.ftc.teamcode.util.Constants.Gamepad.LEFT_TRIGGER_THRESHOLD;
+import static org.firstinspires.ftc.teamcode.util.Constants.Gamepad.RIGHT_TRIGGER_THRESHOLD;
 
 import com.pedropathing.ivy.Command;
+
 import com.pedropathing.ivy.Scheduler;
-import com.pedropathing.math.Pose;
 import com.qualcomm.robotcore.hardware.Gamepad;
 
 import org.firstinspires.ftc.teamcode.mechanisms.Drivetrain;
 import org.firstinspires.ftc.teamcode.mechanisms.FlowerBar;
 import org.firstinspires.ftc.teamcode.mechanisms.Intake;
-import org.firstinspires.ftc.teamcode.mechanisms.Shooter;
-import org.firstinspires.ftc.teamcode.mechanisms.Transfer;
+import org.firstinspires.ftc.teamcode.mechanisms.Outtake;
 import org.firstinspires.ftc.teamcode.mechanisms.Turret;
+import org.firstinspires.ftc.teamcode.mechanisms.Transfer;
 import org.firstinspires.ftc.teamcode.util.Constants;
 import org.firstinspires.ftc.teamcode.util.PanelsPoseTelemetry;
 
@@ -27,10 +28,11 @@ public class Robot implements NextRobot {
     public enum State {
         IDLE,
         INTAKE,
+        REVERSE,
         SHOOT_POLLEN,
         INTAKE_AND_SHOOT,
         INTAKE_AND_SLOW,
-        HOLD,
+        HOLD_AND_SHOOT,
         FLOWER_BAR
     }
 
@@ -40,10 +42,9 @@ public class Robot implements NextRobot {
 
     private State state = State.IDLE;
     private State lastAppliedState = null;
-
     public Drivetrain drivetrain;
     public Intake intake;
-    public Shooter shooter;
+    public Outtake shooter;
     public Transfer transfer;
     public FlowerBar flowerBar;
     public Turret turret;
@@ -54,31 +55,36 @@ public class Robot implements NextRobot {
         return state;
     }
 
-    public void setState(State newState) {
-        if (newState != null) {
-            state = newState;
-        }
+    public Command setState(State newState) {
+        return instant(() -> state = newState);
     }
     private void configureKeybinds() {
-        boolean leftTrigger = gp1.left_trigger > leftTriggerThreshold;
-        boolean rightTrigger = gp1.right_trigger > rightTriggerThreshold;
+        boolean leftTrigger = gp1.left_trigger > LEFT_TRIGGER_THRESHOLD;
+        boolean rightTrigger = gp1.right_trigger > RIGHT_TRIGGER_THRESHOLD;
         boolean leftBumper = gp1.left_bumper;
         boolean rightBumper = gp1.right_bumper;
+        boolean a = gp1.a;
 
-        if (leftTrigger) {
-            state = State.FLOWER_BAR;
-        } else if (leftBumper && rightBumper && rightTrigger) {
+        if (gp1.y) {
+            state = State.REVERSE;
+        } else if (leftTrigger && rightTrigger) {
+            state = State.INTAKE_AND_SLOW;
+        } else if (leftBumper && rightBumper) {
             state = State.INTAKE_AND_SHOOT;
         } else if (rightTrigger) {
-            state = State.HOLD;
-        } else if (leftBumper && rightBumper) {
-            state = State.INTAKE_AND_SLOW;
+            state = State.HOLD_AND_SHOOT;
+        } else if (leftTrigger) {
+            state = State.FLOWER_BAR;
         } else if (leftBumper) {
             state = State.INTAKE;
         } else if (rightBumper) {
             state = State.SHOOT_POLLEN;
         } else {
             state = State.IDLE;
+        }
+
+        if (a) {
+            drivetrain.setPose(Constants.Drivetrain.RESET_POSE);
         }
     }
 
@@ -89,7 +95,7 @@ public class Robot implements NextRobot {
         lastAppliedState = state;
 
         Intake.IntakeState intakeState = Intake.IntakeState.IDLE;
-        Shooter.ShooterState shooterState = Shooter.ShooterState.IDLE;
+        Outtake.OuttakeState outtakeState = Outtake.OuttakeState.IDLE;
         Transfer.TransferState transferState = Transfer.TransferState.IDLE;
         FlowerBar.FlowerBarState flowerBarState = FlowerBar.FlowerBarState.STOW;
         Drivetrain.DrivetrainState drivetrainState = Drivetrain.DrivetrainState.MANUAL;
@@ -100,40 +106,47 @@ public class Robot implements NextRobot {
 
             case INTAKE:
                 intakeState = Intake.IntakeState.RUNNING;
-                transferState = Transfer.TransferState.RUNNING_INTAKE;
+                transferState = Transfer.TransferState.INTAKE;
+                break;
+
+            case REVERSE:
+                intakeState = Intake.IntakeState.REVERSE;
+                transferState = Transfer.TransferState.REVERSE;
                 break;
 
             case SHOOT_POLLEN:
-                shooterState = Shooter.ShooterState.START_POLLEN;
-                transferState = Transfer.TransferState.RUNNING_OUTTAKE;
+                outtakeState = Outtake.OuttakeState.START_POLLEN;
+                transferState = Transfer.TransferState.SHOOT;
                 break;
 
             case INTAKE_AND_SHOOT:
                 intakeState = Intake.IntakeState.RUNNING;
-                shooterState = Shooter.ShooterState.START_POLLEN;
-                transferState = Transfer.TransferState.RUNNING_BOTH;
+                outtakeState = Outtake.OuttakeState.START_POLLEN;
+                transferState = Transfer.TransferState.SHOOT;
                 break;
 
             case INTAKE_AND_SLOW:
                 intakeState = Intake.IntakeState.RUNNING;
-                transferState = Transfer.TransferState.RUNNING_INTAKE;
+                transferState = Transfer.TransferState.INTAKE;
                 drivetrainState = Drivetrain.DrivetrainState.SLOW;
                 break;
 
-            case HOLD:
+            case HOLD_AND_SHOOT:
                 drivetrainState = Drivetrain.DrivetrainState.HOLD;
+                outtakeState = Outtake.OuttakeState.START_POLLEN;
+                transferState = Transfer.TransferState.SHOOT;
                 break;
 
             case FLOWER_BAR:
                 flowerBarState = FlowerBar.FlowerBarState.DEPLOY;
                 intakeState = Intake.IntakeState.RUNNING;
-                transferState = Transfer.TransferState.RUNNING_INTAKE;
+                transferState = Transfer.TransferState.INTAKE;
                 break;
         }
 
         Command mechanismCommands = parallel(
                 intake.setState(intakeState),
-                shooter.setState(shooterState),
+                shooter.setState(outtakeState),
                 transfer.setState(transferState),
                 flowerBar.setState(flowerBarState)
         );
@@ -155,8 +168,18 @@ public class Robot implements NextRobot {
     }
 
     public void dataLog() {
+        Telemetry.log("Alliance: ", alliance);
         Telemetry.log("Robot State: ", state);
-        Telemetry.log("Drivetrain State: ", drivetrain.getState());
+
+        Telemetry.log("Intake State: ", intake.getState());
+        Telemetry.log("Outtake State: ", shooter.getState());
+        Telemetry.log("Shooter RPM: ", shooter.getRPM());
+        Telemetry.log("Shooter Ready: ", shooter.isReady());
+        Telemetry.log("Transfer State: ", transfer.getState());
+        Telemetry.log("Transfer Feeding: ", transfer.isFeeding());
+        Telemetry.log("Flower Bar State: ", flowerBar.getState());
+        Telemetry.log("Turret State: ", turret.getState());
+
         PanelsPoseTelemetry.update(drivetrain.getPose());
     }
 
@@ -164,11 +187,11 @@ public class Robot implements NextRobot {
         this.autonomous = autonomous;
         this.gp1 = opMode.gamepad1;
 
-        drivetrain = new Drivetrain(opMode.hardwareMap, opMode.gamepad1);
+        drivetrain = new Drivetrain(opMode.hardwareMap, opMode.gamepad1, alliance);
         turret = new Turret(this);
         intake = new Intake();
-        shooter = new Shooter();
-        transfer = new Transfer();
+        shooter = new Outtake();
+        transfer = new Transfer(shooter);
         flowerBar = new FlowerBar();
 
         state = State.IDLE;

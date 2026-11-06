@@ -30,35 +30,46 @@ public class Constants {
         RED
     }
     public static class Gamepad {
-        public static final double leftTriggerThreshold = 0.2;
-        public static final double rightTriggerThreshold = 0.2;
+        public static final double LEFT_TRIGGER_THRESHOLD = 0.2;
+        public static final double RIGHT_TRIGGER_THRESHOLD = 0.2;
     }
     public static class Intake {
         public static final NextMotor intakeMotor = new NextMotor(RobotController.expansionHub(), 0);
-        public static final double intakeIdlePower = 0.0;
-        public static final double intakeRunningPower = 1.0;
+        public static final NextMotor.Direction INTAKE_MOTOR_DIRECTION = NextMotor.Direction.REVERSE;
+
+        public static final NextMotor transferMotor1 = new NextMotor(RobotController.controlHub(), 1);
+        public static final NextMotor.Direction TRANSFER_MOTOR1_DIRECTION = NextMotor.Direction.REVERSE;
+
+        public static final double INTAKE_IDLE_POWER = 0.0;
+        public static final double INTAKE_RUNNING_POWER = 1.0;
     }
 
-    public static class Shooter {
+    public static class Outtake {
         // 6000 RPM goBILDA 5203 motor, 1:1 flywheel: 28 encoder counts per revolution.
         public static final NextMotor shooterMotor = new NextMotor(RobotController.controlHub(), 0, Units.getRadians(2.0 * Math.PI / 28.0));
+        public static final NextMotor.Direction SHOOTER_MOTOR_DIRECTION = NextMotor.Direction.REVERSE;
+        public static final NextMotor.ZeroPowerBehavior ZERO_POWER_BEHAVIOR = NextMotor.ZeroPowerBehavior.FLOAT;
 
         public static double SHOOTING_SETPOINT = 3000;
         public static final double SHOOTING_THRESHOLD = 300;
         public static final long READY_TIME_MS = 100;
         public static final double IDLE_SETPOINT = SHOOTING_SETPOINT * 0.5;
 
-        public static final double KP = 85.0;
-        public static final double KV = 35.0;
+        // Starting gains in motor power per RPM; tune on the robot under load.
+        public static final double KP = 0.02;
+        public static final double KV = 1.0 / 6000.0;
+        public static final int SHOOT_TIMEOUT_MS = 5000;
+        public static final int FEED_TIME_MS = 200;
     }
 
     public static class Transfer {
-        public static final NextMotor transferMotor1 = new NextMotor(RobotController.controlHub(), 1);
-        public static final NextMotor transferMotor2 = new NextMotor(RobotController.expansionHub(), 3);
-        public static final double POWER = 1.0;
-        public static final double IDLE_POWER = 0.0;
-    }
 
+        public static final NextMotor transferMotor2 = new NextMotor(RobotController.expansionHub(), 3);
+        public static final NextMotor.Direction TRANSFER_MOTOR2_DIRECTION = NextMotor.Direction.FORWARD;
+        public static final double TRANSFER_RUNNING_POWER = 1.0;
+        public static final double IDLE_POWER = 0.0;
+        public static final int REVERSE_TIME_MS = 100;
+    }
     public static class Turret {
         public static final NextServo turretServo1 = new NextServo(RobotController.controlHub(), 1, Constants.Turret.servoCacheTolerance);
         public static final NextServo turretServo2 = new NextServo(RobotController.controlHub(), 2, Constants.Turret.servoCacheTolerance);
@@ -73,16 +84,18 @@ public class Constants {
 
     public static class FlowerBar {
         public static final NextServo flowerBarServo = new NextServo(RobotController.controlHub(), 0, Constants.FlowerBar.servoCacheTolerance);
-        public static final NextMotor.Direction flowerBarServoDirection = NextMotor.Direction.REVERSE;
+        public static final NextMotor.Direction flowerBarServoDirection = NextMotor.Direction.FORWARD;
 
-        public static final double STOW_POSE = 0.95;
-        public static final double DEPLOY_POSE = 0.3;
+        public static final double STOW_POSE = 0;
+        public static final double DEPLOY_POSE = 0.655;
         public static final double servoCacheTolerance = 0.001;
     }
 
     public static class ShotCalculator {
-        public static final Pose blueGoal = new Pose(84, 54);
-        public static final Pose redGoal = new Pose(84, 54);
+        public static final Pose blueGoalLow = new Pose(85.4, 55.5);
+        public static final Pose blueGoalHigh = new Pose(85.4, 82.6);
+        public static final Pose redGoalLow = new Pose(59.0, 60.8);
+        public static final Pose redGoalHigh = new Pose(59.0, 87.9);
     }
 
     public static com.pedropathing.drivetrain.Drivetrain drivetrain(HardwareMap h) {
@@ -102,10 +115,12 @@ public class Constants {
     }
 
     public static class Drivetrain {
-        public static final Pose startPose = new Pose(0, 0, 0);
-        public static final Pose resetPose = new Pose(9, 9, Math.toRadians(90));
+        public static final Pose START_POSE = new Pose(7, 7, Math.toRadians(90));
+        public static final Pose RESET_POSE = new Pose(7, 7, Math.toRadians(90));
 
-        public static final double slowSpeed = 0.4;
+        public static final double DRIVE_SCALE = 1.0;
+        public static final double SLOW_SCALE = 0.25;
+        public static final double DEADBAND = 0.05;
 
         public static final MecanumConfig mecanumConfig = new MecanumConfig(c -> {
             c.frontLeftName.set("fl");

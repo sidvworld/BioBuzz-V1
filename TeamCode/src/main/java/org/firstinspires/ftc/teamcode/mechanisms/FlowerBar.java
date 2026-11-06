@@ -17,7 +17,7 @@ public class FlowerBar implements Mechanism {
         DEPLOY
     }
 
-    public FlowerBarState flowerBarState;
+    private FlowerBarState flowerBarState;
 
     public FlowerBar() {
         flowerBarState = FlowerBarState.STOW;
@@ -37,6 +37,10 @@ public class FlowerBar implements Mechanism {
             default:
                 break;
         }
+    }
+
+    public FlowerBarState getState() {
+        return flowerBarState;
     }
 
     public Command setState(FlowerBarState state) {

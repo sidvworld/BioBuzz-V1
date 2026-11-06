@@ -58,8 +58,8 @@ public class MecanumTuner extends Procedure {
         withDisplay(Display.fourWheelBot(wheel, false), () -> {
             runOpMode(new SpinMotor(displayName, hardwareName));
 
-            Inputs inputs = inputs(displayName, "Determine the " + displayName.toLowerCase() + " motor direction.");
-            Inputs.Field<Boolean> correctMotorField = inputs.b("Did the " + displayName.toLowerCase() + " motor spin?").withDefault(true);
+            Inputs inputs = inputs(displayName, "Determine the " + displayName.toLowerCase(java.util.Locale.ROOT) + " motor direction.");
+            Inputs.Field<Boolean> correctMotorField = inputs.b("Did the " + displayName.toLowerCase(java.util.Locale.ROOT) + " motor spin?").withDefault(true);
             Inputs.Field<Direction> directionField = inputs.e("Which way did the motor spin?", Direction.class);
             awaitInputs(inputs);
 
@@ -78,7 +78,7 @@ class SpinMotor extends TuningOpMode<Void> {
     private final String name;
 
     public SpinMotor(String displayName, String hardwareName) {
-        super(displayName, "The " + displayName.toLowerCase() + " motor will spin. The interactive diagram shows which way is forward. Click stop when you know if it is spinning forward or reversed.", true);
+        super(displayName, "The " + displayName.toLowerCase(java.util.Locale.ROOT) + " motor will spin. The interactive diagram shows which way is forward. Click stop when you know if it is spinning forward or reversed.", true);
         this.name = hardwareName;
     }
 

@@ -2,11 +2,13 @@ package org.firstinspires.ftc.teamcode.opmodes.autos.routines;
 
 import static com.pedropathing.api.Paths.line;
 import static com.pedropathing.ivy.commands.Commands.waitMs;
+import static com.pedropathing.ivy.commands.Commands.waitUntil;
+import static com.pedropathing.ivy.groups.Groups.race;
+import static org.firstinspires.ftc.teamcode.util.Constants.Outtake.*;
 import static com.pedropathing.ivy.groups.Groups.sequential;
 
 import com.pedropathing.api.PoseFactory;
 import com.pedropathing.ivy.Command;
-import com.pedropathing.ivy.commands.Commands;
 import com.pedropathing.math.Pose;
 import com.pedropathing.paths.Path;
 
@@ -25,7 +27,14 @@ public final class AutoRoutines {
         }
 
         public static Command run(Robot robot) {
-            return waitMs(100);
+            return sequential(
+                    robot.setState(Robot.State.SHOOT_POLLEN),
+                    race(
+                            sequential(waitUntil(robot.transfer::isFeeding), waitMs(FEED_TIME_MS)),
+                            waitMs(SHOOT_TIMEOUT_MS)
+                    ),
+                    robot.setState(Robot.State.IDLE)
+            );
         }
     }
 }

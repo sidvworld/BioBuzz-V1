@@ -23,7 +23,7 @@ public class Turret implements Mechanism {
 
     private final Robot robot;
 
-    public TurretState turretState = TurretState.TRACKING;
+    private TurretState turretState = TurretState.TRACKING;
 
     private double angle = 0.0;
     private double distance = 0.0;
@@ -72,6 +72,10 @@ public class Turret implements Mechanism {
                 updateTurret(0.0);
                 break;
         }
+    }
+
+    public TurretState getState() {
+        return turretState;
     }
 
     public Command setState(TurretState state) {

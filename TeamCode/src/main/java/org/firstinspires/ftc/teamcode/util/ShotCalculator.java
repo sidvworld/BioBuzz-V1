@@ -5,6 +5,8 @@ import com.pedropathing.utils.Angle;
 
 public final class ShotCalculator {
 
+    private static final double HIGH_GOAL_MIN_Y = 70.0;
+
     private ShotCalculator() {}
 
     public static final class Solution {
@@ -23,10 +25,18 @@ public final class ShotCalculator {
     }
 
     public static Solution calculate(Pose robotPose, Constants.Alliance alliance) {
-
-        Pose goalPose = alliance == Constants.Alliance.RED
-                ? Constants.ShotCalculator.redGoal
-                : Constants.ShotCalculator.blueGoal;
+        // Select by robot position, independently of turret offset or heading.
+        boolean highGoal = robotPose.y() >= HIGH_GOAL_MIN_Y;
+        Pose goalPose;
+        if (alliance == Constants.Alliance.RED) {
+            goalPose = highGoal
+                    ? Constants.ShotCalculator.redGoalHigh
+                    : Constants.ShotCalculator.redGoalLow;
+        } else {
+            goalPose = highGoal
+                    ? Constants.ShotCalculator.blueGoalHigh
+                    : Constants.ShotCalculator.blueGoalLow;
+        }
 
         Pose turretPose = turretPosition(robotPose);
 

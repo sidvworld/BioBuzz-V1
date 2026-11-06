@@ -25,11 +25,12 @@ public class Test1Auto extends NextOpMode {
 
     @Override
     public void start() {
-        robot.setState(Robot.State.IDLE);
+        robot.setState(Robot.State.IDLE).schedule();
+        AutoRoutines.Test1.run(robot).schedule();
     }
 
     @Override
     public void end() {
-        MatchState.save(robot.drivetrain.getPose());
+        MatchState.save(robot.drivetrain.getPose(), robot.alliance);
     }
 }
